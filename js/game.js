@@ -1,8 +1,8 @@
 // Create the canvas
 var canvas = document.createElement("canvas");
 var ctx = canvas.getContext("2d");
-canvas.width = 1000;
-canvas.height = 600;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 document.body.appendChild(canvas);
 
 // Background image
@@ -12,7 +12,7 @@ bgImage.onload = function () {
 	bgReady = true;
 };
 bgImage.src = "img/spacebg.jpg";
-
+bgImage.width = 1000;
 // Hero image
 var heroReady = false;
 var heroImage = new Image();
@@ -72,6 +72,26 @@ var update = function (modifier) {
 		hero.x += hero.speed * modifier;
 	}
 
+	// Take care of overflow
+	if (hero.x > canvas.width - 30)
+		hero.x = canvas.width - 30;
+	if (hero.x < 0)
+		hero.x = 0;
+	if (hero.y > canvas.height - 30)
+	hero.y = canvas.height - 30;
+	if (hero.y < 0)
+	hero.y = 0;
+
+	// Monster overflow
+	monster.x += (Math.random() - 0.5) * hero.speed * 0.09;
+	monster.x = Math.abs(monster.x);
+	if (monster.x > canvas.width)
+		monster.x = canvas.width;
+	monster.y += (Math.random() - 0.5) * hero.speed * 0.09;
+	monster.y = Math.abs(monster.y);
+    if (monster.y > canvas.height)
+		monster.y = canvas.height;
+
 	// Are they touching?
 	if (
 		hero.x <= (monster.x + 32)
@@ -82,6 +102,7 @@ var update = function (modifier) {
 		++monstersCaught;
 		reset();
 	}
+
 };
 
 // Draw everything
@@ -116,6 +137,65 @@ var main = function () {
 
 	then = now;
 };
+
+// For mobile 
+canvas.addEventListener("click", function(e){
+
+    // Because mobile is a pain
+    var modifier = 0.3;
+    var mmodifier = 0.1;
+    var x = 0;
+    var y = 0;
+    if (e.pageX !== undefined && e.pageY !== undefined) {
+    x = e.pageX;
+    y = e.pageY;
+    }
+
+    // Take care of mobile taps for movement
+
+	if (y < hero.y) { // Player holding up
+	    hero.y -= hero.speed * modifier;
+	}
+	if (y > hero.y) { // Player holding down
+		hero.y += hero.speed * modifier;
+	}
+	if (x < hero.x) { // Player holding left
+		hero.x -= hero.speed * modifier;
+	}
+	if (x > hero.x) { // Player holding right
+		hero.x += hero.speed * modifier;
+	}
+
+	monster.x += (Math.random() - 0.5) * hero.speed * mmodifier;
+	monster.x = Math.abs(monster.x);
+	monster.y += (Math.random() - 0.5) * hero.speed * mmodifier;
+	monster.y = Math.abs(monster.y);
+	// Are they touching?
+	if (
+		hero.x <= (monster.x + 32)
+		&& monster.x <= (hero.x + 32)
+		&& hero.y <= (monster.y + 32)
+		&& monster.y <= (hero.y + 32)
+	) {
+		++monstersCaught;
+		reset();
+	}
+}, false);
+var getpos = function (e) {
+    var position = {x: null, y: null};
+    if (Modernizr.touch) { //global variable detecting touch support
+        if (e.touches && e.touches.length > 0) {
+            position.x = e.touches[0].pageX - canvasPosition.x;
+            position.y = e.touches[0].pageY - canvasPosition.y;
+        }
+    }
+    else {
+        position.x = e.pageX - canvasPosition.x;
+        position.y = e.pageY - canvasPosition.y;
+    }
+    
+    return position;
+}
 
 // Let's play this game!
 reset();
